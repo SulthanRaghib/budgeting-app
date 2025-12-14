@@ -8,4 +8,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateSavingTransaction extends CreateRecord
 {
     protected static string $resource = SavingTransactionResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
