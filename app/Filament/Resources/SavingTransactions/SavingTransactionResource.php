@@ -9,6 +9,10 @@ use App\Filament\Resources\SavingTransactions\Schemas\SavingTransactionForm;
 use App\Filament\Resources\SavingTransactions\Tables\SavingTransactionsTable;
 use App\Models\SavingTransaction;
 use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -64,6 +68,50 @@ class SavingTransactionResource extends Resource
                         'oninput' => "(function(){let v = this.value.replace(/[^0-9]/g,''); this.value = v ? (Number(v).toLocaleString('id-ID')) : '';}).call(this)",
                         'onblur' => "(function(){let v = this.value.replace(/[^0-9]/g,''); this.value = v ? (Number(v).toLocaleString('id-ID')) : '';}).call(this)",
                     ])
+                    ->rules([
+                        function () use ($userId) {
+                            $recordId = request()->route('record');
+
+                            $totalIncome = \App\Models\Transaction::join('categories', 'transactions.category_id', '=', 'categories.id')
+                                ->where('transactions.user_id', $userId)
+                                ->where('categories.type', 'income')
+                                ->sum('transactions.amount');
+
+                            $totalExpense = \App\Models\Transaction::join('categories', 'transactions.category_id', '=', 'categories.id')
+                                ->where('transactions.user_id', $userId)
+                                ->where('categories.type', 'expense')
+                                ->sum('transactions.amount');
+
+                            $savingsQuery = \App\Models\SavingTransaction::where('user_id', $userId);
+                            if ($recordId) {
+                                $savingsQuery->where('id', '<>', $recordId);
+                            }
+                            $totalSavings = $savingsQuery->sum('amount');
+
+                            $available = (float) $totalIncome - ((float) $totalExpense + (float) $totalSavings);
+
+                            return new class($available) implements \Illuminate\Contracts\Validation\Rule {
+                                protected $available;
+
+                                public function __construct($available)
+                                {
+                                    $this->available = $available;
+                                }
+
+                                public function passes($attribute, $value)
+                                {
+                                    $amount = is_numeric($value) ? (float) $value : (float) preg_replace('/[^0-9]/', '', (string) $value);
+
+                                    return $amount <= (float) $this->available;
+                                }
+
+                                public function message()
+                                {
+                                    return 'Insufficient balance. You only have IDR ' . number_format($this->available, 0, ',', '.') . ' available.';
+                                }
+                            };
+                        },
+                    ])
                     ->formatStateUsing(fn($state) => $state !== null && $state !== '' ? number_format((float) $state, 0, ',', '.') : null)
                     ->dehydrateStateUsing(fn($state) => $state !== null && $state !== '' ? (float) preg_replace('/[^0-9]/', '', (string) $state) : null),
 
@@ -103,6 +151,18 @@ class SavingTransactionResource extends Resource
                     ->label('Notes')
                     ->limit(30)
                     ->toggleable(),
+            ])
+            ->filters([
+                //
+            ])
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 
