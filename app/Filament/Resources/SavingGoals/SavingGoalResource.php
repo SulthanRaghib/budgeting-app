@@ -26,6 +26,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class SavingGoalResource extends Resource
 {
@@ -34,6 +35,7 @@ class SavingGoalResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTrophy;
 
     protected static ?string $recordTitleAttribute = 'SavingGoal';
+    protected static UnitEnum|string|null $navigationGroup = 'Tabungan';
 
     public static function form(Schema $schema): Schema
     {
