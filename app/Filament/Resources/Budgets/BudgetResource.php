@@ -20,6 +20,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
+use Filament\Tables\Columns\ViewColumn;
+
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -97,26 +99,66 @@ class BudgetResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                $query->with(['category' => function ($q) {
+                    $q->withSum(['transactions' => function ($q2) {
+                        $q2->whereMonth('date', now()->month)
+                            ->whereYear('date', now()->year);
+                    }], 'amount');
+                }]);
+            })
             ->columns([
                 TextColumn::make('category.name')
                     ->label('Category')
                     ->searchable()
                     ->sortable()
+                    ->weight('bold')
                     ->wrap(),
 
                 TextColumn::make('amount')
-                    ->label('Amount')
+                    ->label('Target')
                     ->sortable()
                     ->formatStateUsing(fn($state) => $state !== null && $state !== '' ? 'Rp ' . number_format((float) $state, 0, ',', '.') : null)
                     ->alignEnd(),
 
+                TextColumn::make('spent')
+                    ->label('Dipakai')
+                    ->getStateUsing(fn($record) => $record->category->transactions_sum_amount ?? 0)
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 0, ',', '.'))
+                    ->color(fn($state, $record) => $state > $record->amount ? 'danger' : 'success')
+                    ->alignEnd(),
+
+                TextColumn::make('remaining')
+                    ->label('Sisa')
+                    ->getStateUsing(fn($record) => $record->amount - ($record->category->transactions_sum_amount ?? 0))
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 0, ',', '.'))
+                    ->color(fn($state) => $state < 0 ? 'danger' : 'success')
+                    ->alignEnd(),
+
+                TextColumn::make('status')
+                    ->badge()
+                    ->getStateUsing(function ($record) {
+                        $spent = $record->category->transactions_sum_amount ?? 0;
+                        $target = $record->amount;
+                        if ($spent > $target) return 'Overbudget';
+                        if ($spent == $target) return 'Tepat';
+                        return 'Aman';
+                    })
+                    ->colors([
+                        'danger' => 'Overbudget',
+                        'warning' => 'Tepat',
+                        'success' => 'Aman',
+                    ])
+                    ->alignCenter(),
+
+                ViewColumn::make('progress')
+                    ->label('Progress')
+                    ->view('filament.tables.columns.budget-progress-bar')
+                    ->alignEnd(),
+
                 TextColumn::make('period')
                     ->label('Period')
-                    ->badge(),
-
-                TextColumn::make('created_at')
-                    ->label('Created')
-                    ->dateTime('d M Y H:i')
+                    ->badge()
                     ->toggleable(),
             ])
             ->recordActions([
