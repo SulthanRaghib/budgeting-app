@@ -15,6 +15,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Hidden;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Schemas\Components\Section;
@@ -43,6 +44,13 @@ class TransactionResource extends Resource
             ->schema([
                 Section::make('Transaction')
                     ->schema([
+                        Hidden::make('user_id')->default($userId),
+
+                        TextInput::make('user_name')
+                            ->label('User')
+                            ->default(Auth::user()?->name)
+                            ->disabled()
+                            ->dehydrated(false),
                         Select::make('category_id')
                             ->label('Category')
                             ->relationship('category', 'name', fn($query) => $userId ? $query->where('user_id', $userId) : $query)
@@ -138,6 +146,20 @@ class TransactionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->where('user_id', Auth::id());
+    }
+
+    public static function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['user_id'] = Auth::id();
+
+        return $data;
+    }
+
+    public static function mutateFormDataBeforeSave(array $data, $record): array
+    {
+        $data['user_id'] = $record->user_id ?? Auth::id();
+
+        return $data;
     }
 
     public static function getPages(): array

@@ -13,9 +13,15 @@ class Category extends Model
         'color',
         'icon',
     ];
+    protected $appends = ['user_name'];
 
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class);
+    }
+
+    public function getUserNameAttribute()
+    {
+        return $this->user?->name;
     }
 }

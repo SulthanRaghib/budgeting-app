@@ -24,6 +24,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ColorColumn;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryResource extends Resource
 {
@@ -35,10 +36,18 @@ class CategoryResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+        $userId = Auth::id();
         return $schema
             ->schema([
                 Section::make('Category')
                     ->schema([
+                        Hidden::make('user_id')->default($userId),
+
+                        TextInput::make('user_name')
+                            ->label('User')
+                            ->default(Auth::user()?->name)
+                            ->disabled()
+                            ->dehydrated(false),
                         TextInput::make('name')
                             ->required(),
 
@@ -111,5 +120,19 @@ class CategoryResource extends Resource
             'create' => CreateCategory::route('/create'),
             'edit' => EditCategory::route('/{record}/edit'),
         ];
+    }
+
+    public static function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['user_id'] = Auth::id();
+
+        return $data;
+    }
+
+    public static function mutateFormDataBeforeSave(array $data, $record): array
+    {
+        $data['user_id'] = $record->user_id ?? Auth::id();
+
+        return $data;
     }
 }

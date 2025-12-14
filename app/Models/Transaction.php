@@ -14,6 +14,7 @@ class Transaction extends Model
         'description',
         'image',
     ];
+    protected $appends = ['user_name'];
 
     public function user()
     {
@@ -23,5 +24,10 @@ class Transaction extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function getUserNameAttribute()
+    {
+        return $this->user?->name;
     }
 }
