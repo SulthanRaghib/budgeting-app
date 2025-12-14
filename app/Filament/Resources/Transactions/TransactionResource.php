@@ -27,6 +27,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class TransactionResource extends Resource
 {
@@ -35,6 +36,7 @@ class TransactionResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
 
     protected static ?string $recordTitleAttribute = 'description';
+    protected static UnitEnum|string|null $navigationGroup = 'Anggaran & Transaksi';
 
     public static function form(Schema $schema): Schema
     {

@@ -26,6 +26,7 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class BudgetResource extends Resource
 {
@@ -34,6 +35,7 @@ class BudgetResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedScale;
 
     protected static ?string $recordTitleAttribute = 'Budget';
+    protected static UnitEnum|string|null $navigationGroup = 'Anggaran & Transaksi';
 
     public static function form(Schema $schema): Schema
     {
