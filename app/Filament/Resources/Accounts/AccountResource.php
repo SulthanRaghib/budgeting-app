@@ -43,9 +43,16 @@ class AccountResource extends Resource
             ColorPicker::make('color'),
             TextInput::make('initial_balance')
                 ->label('Initial Balance')
-                ->numeric()
-                ->default(0)
-                ->required(),
+                ->required()
+                ->prefix('Rp ')
+                ->extraInputAttributes([
+                    'inputmode' => 'numeric',
+                    'onfocus' => "(function(){this.value = (this.value || '').toString().replace(/[^0-9]/g, '');}).call(this)",
+                    'oninput' => "(function(){let v = this.value.replace(/[^0-9]/g,''); this.value = v ? (Number(v).toLocaleString('id-ID')) : '';}).call(this)",
+                    'onblur' => "(function(){let v = this.value.replace(/[^0-9]/g,''); this.value = v ? (Number(v).toLocaleString('id-ID')) : '';}).call(this)",
+                ])
+                ->formatStateUsing(fn($state) => $state !== null && $state !== '' ? number_format((float) $state, 0, ',', '.') : null)
+                ->dehydrateStateUsing(fn($state) => $state !== null && $state !== '' ? (float) preg_replace('/[^0-9]/', '', (string) $state) : null),
             TextInput::make('current_balance')
                 ->label('Current Balance')
                 ->numeric()
