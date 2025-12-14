@@ -10,6 +10,9 @@ class StatsOverview extends BaseWidget
 {
     protected ?string $heading = 'Stats Overview';
 
+    // Listen for account changes and refresh this widget when they occur
+    protected $listeners = ['accountsUpdated' => '$refresh'];
+
     protected function getStats(): array
     {
         $userId = Auth::id();
@@ -26,8 +29,10 @@ class StatsOverview extends BaseWidget
 
         $totalSaved = \App\Models\SavingTransaction::where('user_id', $userId)->sum('amount');
 
-        $freeCash = (float) $totalIncome - ((float) $totalExpense + (float) $totalSaved);
+        // Available balance should reflect actual account balances (current balances)
+        $totalAccountBalance = \App\Models\Account::where('user_id', $userId)->sum('current_balance');
 
+        $freeCash = (float) $totalAccountBalance;
         $format = fn($n) => 'Rp ' . number_format((float) $n, 0, ',', '.');
 
         return [

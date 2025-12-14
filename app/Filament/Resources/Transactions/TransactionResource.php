@@ -147,7 +147,18 @@ class TransactionResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()->after(function ($record) {
+                    \Filament\Notifications\Notification::make()
+                        ->success()
+                        ->title('Transaction deleted')
+                        ->body(sprintf('Account %s balance: Rp %s', optional($record->account)->name ?? 'N/A', number_format(optional($record->account)->current_balance ?? 0, 0, ',', '.')))
+                        ->send();
+
+                    // Notify other components to refresh
+                    if (method_exists($this, 'emit')) {
+                        $this->emit('accountsUpdated');
+                    }
+                }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

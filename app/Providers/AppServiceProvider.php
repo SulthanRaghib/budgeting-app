@@ -7,6 +7,8 @@ use App\Models\SavingTransaction;
 use App\Observers\SavingTransactionObserver;
 use App\Models\Transaction;
 use App\Observers\TransactionObserver;
+use App\Models\Account;
+use App\Observers\AccountObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,5 +27,6 @@ class AppServiceProvider extends ServiceProvider
     {
         SavingTransaction::observe(SavingTransactionObserver::class);
         Transaction::observe(TransactionObserver::class);
+        Account::observe(AccountObserver::class);
     }
 }
