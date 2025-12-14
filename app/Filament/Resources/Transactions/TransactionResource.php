@@ -60,6 +60,13 @@ class TransactionResource extends Resource
                             ->preload()
                             ->required(),
 
+                        Select::make('account_id')
+                            ->label('Account')
+                            ->relationship('account', 'name', fn($query) => $userId ? $query->where('user_id', $userId) : $query)
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+
                         DatePicker::make('date')
                             ->default(now())
                             ->required(),
@@ -101,6 +108,10 @@ class TransactionResource extends Resource
                     ->label('Date')
                     ->date('d M Y')
                     ->sortable(),
+
+                TextColumn::make('account.name')
+                    ->label('Account')
+                    ->toggleable(),
 
                 TextColumn::make('amount')
                     ->label('Amount')
