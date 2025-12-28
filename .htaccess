@@ -1,0 +1,30 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Mengarahkan Trailing Slashes (garis miring di akhir URL)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+    # Mengarahkan semua request ke folder public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# KEAMANAN TAMBAHAN (SANGAT PENTING)
+# ----------------------------------------------------------------------
+# Karena Anda menaruh source code di root, kita wajib memblokir akses
+# ke file sensitif seperti .env agar tidak bisa di-download orang lain.
+
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "(composer\.json|composer\.lock|package\.json|package-lock\.json|artisan)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
