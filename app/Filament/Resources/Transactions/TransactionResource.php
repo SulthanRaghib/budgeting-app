@@ -16,10 +16,14 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Resources\Resource;
-use Filament\Support\Icons\Heroicon;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
@@ -40,29 +44,54 @@ class TransactionResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        $userId = Auth::id();
-
         return $schema
             ->schema([
-                Section::make('Transaction')
+                Section::make('Transaction Details')
                     ->schema([
-                        Hidden::make('user_id')->default($userId),
+                        Hidden::make('user_id')
+                            ->default(Auth::id()),
 
-                        TextInput::make('user_name')
-                            ->label('User')
-                            ->default(Auth::user()?->name)
-                            ->disabled()
-                            ->dehydrated(false),
+                        ToggleButtons::make('type')
+                            ->label('Type')
+                            ->options([
+                                'income' => 'Income',
+                                'expense' => 'Expense',
+                            ])
+                            ->colors([
+                                'income' => 'success',
+                                'expense' => 'danger',
+                            ])
+                            ->icons([
+                                'income' => 'heroicon-o-arrow-up-circle',
+                                'expense' => 'heroicon-o-arrow-down-circle',
+                            ])
+                            ->inline()
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(fn(Set $set) => $set('category_id', null)),
+
                         Select::make('category_id')
                             ->label('Category')
-                            ->relationship('category', 'name', fn($query) => $userId ? $query->where('user_id', $userId) : $query)
+                            ->relationship('category', 'name', function (Builder $query, Get $get) {
+                                $userId = Auth::id();
+                                $type = $get('type');
+
+                                $query->where('user_id', $userId);
+
+                                if ($type) {
+                                    $query->where('type', $type);
+                                } else {
+                                    $query->whereRaw('1 = 0');
+                                }
+                            })
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->live(),
 
                         Select::make('account_id')
                             ->label('Account')
-                            ->relationship('account', 'name', fn($query) => $userId ? $query->where('user_id', $userId) : $query)
+                            ->relationship('account', 'name', fn(Builder $query) => $query->where('user_id', Auth::id()))
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -84,14 +113,15 @@ class TransactionResource extends Resource
                             ->formatStateUsing(fn($state) => $state !== null && $state !== '' ? number_format((float) $state, 0, ',', '.') : null)
                             ->dehydrateStateUsing(fn($state) => $state !== null && $state !== '' ? (float) preg_replace('/[^0-9]/', '', (string) $state) : null),
 
-                        TextInput::make('description')
+                        Textarea::make('description')
                             ->maxLength(255),
 
                         FileUpload::make('image')
                             ->directory('transactions')
                             ->image()
                             ->imageEditor(),
-                    ]),
+                    ])
+                    ->columns(1),
             ]);
     }
 
