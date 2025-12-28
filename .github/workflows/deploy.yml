@@ -43,6 +43,7 @@ jobs:
             **/vendor/**
             **/tests/**
             **/storage/*.key
+            **/bootstrap/cache/*.php
             .env
             .env.example
             .editorconfig
