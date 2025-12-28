@@ -11,8 +11,31 @@ class Dashboard extends BaseDashboard
 
     public function getWidgets(): array
     {
-        return [
+        $widgets = [
+            // Top: full width
+            \App\Filament\Widgets\AdvancedStatsOverview::class,
+            // Small stats row (legacy)
             \App\Filament\Widgets\StatsOverview::class,
+
+            // Middle row (2 columns)
+            \App\Filament\Widgets\CashFlowChart::class,
+            \App\Filament\Widgets\ExpenseCategoryChart::class,
+
+            // Bottom row
+            \App\Filament\Widgets\AccountBalanceTable::class,
         ];
+
+        // Append BudgetProgressWidget only if the class exists (some installs may not have it)
+        if (class_exists(\App\Filament\Widgets\BudgetProgressWidget::class)) {
+            $widgets[] = \App\Filament\Widgets\BudgetProgressWidget::class;
+        }
+
+        return $widgets;
+    }
+
+    public function getColumns(): int | array
+    {
+        // Use a 2 column grid: widgets can declare their own span
+        return 2;
     }
 }
