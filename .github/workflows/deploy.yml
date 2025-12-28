@@ -3,7 +3,7 @@ name: Deploy to InfinityFree via FTP
 on:
   push:
     branches:
-      - master  # Ganti dengan nama branch utama Anda (master/main)
+      - master
 
 jobs:
   web-deploy:
@@ -13,40 +13,10 @@ jobs:
       - name: 🚚 Get latest code
         uses: actions/checkout@v4
 
-      - name: SETUP PHP
+      - name: 🔧 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2' # Sesuaikan dengan versi PHP di InfinityFree Anda
-          extensions: mbstring, bcmath, intl, gd, pdo_mysql
-
-      - name: 📦 Install Composer Dependencies
-        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: ⚡ Install NPM & Build Assets
-        run: |
-          npm install
-          npm run build
-
-      - name: 📂 Sync files via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5name: Deploy to InfinityFree via FTP
-
-on:
-  push:
-    branches:
-      - main  # Ganti dengan nama branch utama Anda (master/main)
-
-jobs:
-  web-deploy:
-    name: 🎉 Deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🚚 Get latest code
-        uses: actions/checkout@v4
-
-      - name: SETUP PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2' # Sesuaikan dengan versi PHP di InfinityFree Anda
+          php-version: "8.2"
           extensions: mbstring, bcmath, intl, gd, pdo_mysql
 
       - name: 📦 Install Composer Dependencies
@@ -63,9 +33,9 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # Penting: Sesuaikan folder tujuan di hosting
-          # Biasanya di InfinityFree folder publik adalah 'htdocs'
+          # InfinityFree biasanya menggunakan folder 'htdocs' sebagai root publik
           server-dir: /htdocs/
+          # Exclude file yang tidak perlu di-upload
           exclude: |
             **/.git*
             **/.git*/**
@@ -76,20 +46,4 @@ jobs:
             .env.example
             .editorconfig
             README.md
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          # Penting: Sesuaikan folder tujuan di hosting
-          # Biasanya di InfinityFree folder publik adalah 'htdocs'
-          server-dir: /htdocs/
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/tests/**
-            **/storage/*.key
-            .env
-            .env.example
-            .editorconfig
-            README.md
+            .github/**
