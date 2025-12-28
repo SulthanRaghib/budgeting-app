@@ -11,6 +11,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -22,6 +23,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
@@ -67,8 +69,12 @@ class TransactionResource extends Resource
                             ])
                             ->inline()
                             ->required()
-                            ->live()
-                            ->afterStateUpdated(fn(Set $set) => $set('category_id', null)),
+                            ->live()->dehydrated(false)
+                            ->afterStateHydrated(function (ToggleButtons $component, $state, $record) {
+                                if ($record && $record->category) {
+                                    $component->state($record->category->type);
+                                }
+                            })->afterStateUpdated(fn(Set $set) => $set('category_id', null)),
 
                         Select::make('category_id')
                             ->label('Category')
@@ -115,7 +121,11 @@ class TransactionResource extends Resource
 
                         Textarea::make('description')
                             ->maxLength(255),
+                    ])
+                    ->columns(1),
 
+                Section::make('Attachment')
+                    ->schema([
                         FileUpload::make('image')
                             ->directory('transactions')
                             ->image()
@@ -153,6 +163,7 @@ class TransactionResource extends Resource
                     ->label('Description')
                     ->limit(30)
                     ->searchable()
+                    ->tooltip(fn($record) => $record->description)
                     ->wrap(),
 
                 ImageColumn::make('image')
@@ -176,6 +187,7 @@ class TransactionResource extends Resource
                     }),
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make()->after(function ($record) {
                     \Filament\Notifications\Notification::make()
