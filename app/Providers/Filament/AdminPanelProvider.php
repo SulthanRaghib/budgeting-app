@@ -36,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Anggaran & Transaksi',
                 'Tabungan',
+                'Investasi',
                 'Data Master',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

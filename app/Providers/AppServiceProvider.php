@@ -9,8 +9,10 @@ use App\Models\Transaction;
 use App\Observers\TransactionObserver;
 use App\Models\Account;
 use App\Models\Transfer;
+use App\Models\StockTransaction;
 use App\Observers\AccountObserver;
 use App\Observers\TransferObserver;
+use App\Observers\StockTransactionObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,5 +33,6 @@ class AppServiceProvider extends ServiceProvider
         Transaction::observe(TransactionObserver::class);
         Account::observe(AccountObserver::class);
         Transfer::observe(TransferObserver::class);
+        StockTransaction::observe(StockTransactionObserver::class);
     }
 }
